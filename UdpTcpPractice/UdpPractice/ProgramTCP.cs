@@ -21,7 +21,7 @@ namespace UdpPractice
 
             if (r.ToLowerInvariant() == "YES".ToLowerInvariant())
             {
-                Console.WriteLine("STarting as TCP Server");
+                Console.WriteLine("Starting as TCP Server");
                 TCPServerRoutine();
             }
             else
@@ -46,12 +46,12 @@ namespace UdpPractice
                 Console.WriteLine("Connected to: " + newClient.Client.RemoteEndPoint);
                 Console.WriteLine("Local to: " + newClient.Client.LocalEndPoint);
 
-                Task.Run(() => AsyncReceiveData(newClient));
-                Task.Run(() => AsyncSendData(newClient));
+                Task.Run(() => ReceiveDataTask(newClient));
+                Task.Run(() => SendDataTask(newClient));
             }
         }
 
-        static void AsyncSendData(TcpClient client)
+        static void SendDataTask(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
 
@@ -67,14 +67,14 @@ namespace UdpPractice
             }
         }
 
-        private static async void AsyncReceiveData(TcpClient client)
+        private static void ReceiveDataTask(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
             byte[] bytes = new byte[1024];
 
             while (true)
             {
-                int bytesRead = await stream.ReadAsync(bytes, 0, bytes.Length);
+                int bytesRead = stream.Read(bytes, 0, bytes.Length);
 
                 if (bytesRead > 0)
                 {
@@ -99,8 +99,8 @@ namespace UdpPractice
             {
                 tcpClient.Connect(targetEndPoint);
 
-                Task.Run(() => AsyncReceiveData(tcpClient));
-                Task.Run(() => AsyncSendData(tcpClient));
+                Task.Run(() => ReceiveDataTask(tcpClient));
+                Task.Run(() => SendDataTask(tcpClient));
 
             }
             catch (SocketException e)
