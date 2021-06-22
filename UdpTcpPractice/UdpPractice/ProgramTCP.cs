@@ -62,7 +62,15 @@ namespace UdpPractice
                 if (line.Length > 0)
                 {
                     byte[] messageBytes = Encoding.ASCII.GetBytes(line);
-                    stream.Write(messageBytes, 0, messageBytes.Length);
+
+                    try
+                    {
+                        stream.Write(messageBytes, 0, messageBytes.Length);
+                    }
+                    catch (System.IO.IOException)
+                    {
+                        return;
+                    }
                 }
             }
         }
@@ -74,13 +82,34 @@ namespace UdpPractice
 
             while (true)
             {
-                int bytesRead = stream.Read(bytes, 0, bytes.Length);
+                int bytesRead = 0;
+
+                try
+                {
+                    bytesRead = stream.Read(bytes, 0, bytes.Length);
+                }
+                catch (System.IO.IOException)
+                {
+                    return;
+                }
 
                 if (bytesRead > 0)
                 {
-                    string message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytesRead);
+                    PacketType type = (PacketType) bytes[0];
 
-                    Console.WriteLine(client.Client.RemoteEndPoint.ToString() + ": " + message);
+                    switch (type)
+                    {
+                        case PacketType.Message:
+                            string message = System.Text.Encoding.ASCII.GetString(bytes, 1, bytesRead);
+                            Console.WriteLine(client.Client.RemoteEndPoint.ToString() + ": " + message);
+                            break;
+
+                        case PacketType.SetColor:
+                            ///
+                            break;
+                    }
+
+     
                 }
             }
         }
@@ -101,7 +130,6 @@ namespace UdpPractice
 
                 Task.Run(() => ReceiveDataTask(tcpClient));
                 Task.Run(() => SendDataTask(tcpClient));
-
             }
             catch (SocketException e)
             {
