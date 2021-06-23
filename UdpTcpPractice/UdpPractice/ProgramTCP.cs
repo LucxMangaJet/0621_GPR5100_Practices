@@ -8,13 +8,29 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace UdpPractice
-{
+{   
+    public enum PacketType
+    {
+        Message = 1,
+        Disconnect,
+        SetUsername,
+        SetColor
+
+    }
+
     class ProgramTCP
     {
+        private static PacketExcutor packetExcutor;
+
 
         public static void MainTCP(string[] args)
         {
+            packetExcutor = new PacketExcutor();
+            packetExcutor.DefineExecutionFor(typeof(MessagePacket), HandleMessage);
+
+
             Console.WriteLine("Start as TCP Server? (YES/NO)");
 
             string r = Console.ReadLine();
@@ -37,7 +53,7 @@ namespace UdpPractice
 
             Console.WriteLine("Server is at " + server.LocalEndpoint.ToString());
             server.Start();
-
+            
             while (true)
             {
                 Console.WriteLine("Waiting for connection...");
@@ -48,6 +64,7 @@ namespace UdpPractice
 
                 Task.Run(() => ReceiveDataTask(newClient));
                 Task.Run(() => SendDataTask(newClient));
+
             }
         }
 
@@ -61,8 +78,10 @@ namespace UdpPractice
 
                 if (line.Length > 0)
                 {
-                    byte[] messageBytes = Encoding.ASCII.GetBytes(line);
-                    stream.Write(messageBytes, 0, messageBytes.Length);
+                    Packet msg = new MessagePacket(0, line);
+                    byte[] data = msg.GetData();
+
+                    stream.Write(data, 0, data.Length);
                 }
             }
         }
@@ -78,9 +97,14 @@ namespace UdpPractice
 
                 if (bytesRead > 0)
                 {
-                    string message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytesRead);
+                    try
+                    {
+                        Packet p = PacketFactory.ToPacket(bytes);
 
-                    Console.WriteLine(client.Client.RemoteEndPoint.ToString() + ": " + message);
+                    } catch (DecodingException e)
+                    {
+                        Console.WriteLine("Decoding Exception: " + e);
+                    }
                 }
             }
         }
@@ -126,6 +150,17 @@ namespace UdpPractice
                 throw new FormatException("Invalid port");
             }
             return new IPEndPoint(ip, port);
+        }
+
+        private static void HandleMessage(Packet p )
+        {
+            MessagePacket packet = (MessagePacket)p;
+
+                    //get username from id
+                    Console.WriteLine(packet.Message);
+
+                   //If message 
+                    // console.write line message
         }
     }
 }
