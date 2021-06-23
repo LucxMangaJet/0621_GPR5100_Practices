@@ -93,7 +93,16 @@ namespace UdpPractice
 
             while (true)
             {
-                int bytesRead = stream.Read(bytes, 0, bytes.Length);
+                int bytesRead = 0;
+
+                try
+                {
+                    bytesRead = stream.Read(bytes, 0, bytes.Length);
+                }
+                catch (System.IO.IOException)
+                {
+                    return;
+                }
 
                 if (bytesRead > 0)
                 {
@@ -125,7 +134,6 @@ namespace UdpPractice
 
                 Task.Run(() => ReceiveDataTask(tcpClient));
                 Task.Run(() => SendDataTask(tcpClient));
-
             }
             catch (SocketException e)
             {
