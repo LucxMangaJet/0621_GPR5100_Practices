@@ -30,6 +30,11 @@ public class ConnectionTestViewController : MonoBehaviour
 
     private void OnGUI()
     {
+        GUILayout.BeginArea(new Rect(Screen.width * 0.25f, Screen.height * 0.25f, Screen.width * 0.5f, Screen.height * 0.5f));
+        GUI.skin.label.fontSize = 26;
+        GUI.skin.button.fontSize = 26;
+        GUI.skin.textField.fontSize = 26;
+
         GUI.color = Color.white;
         GUILayout.Label("State: " + PhotonNetwork.NetworkClientState);
 
@@ -91,10 +96,11 @@ public class ConnectionTestViewController : MonoBehaviour
                 }
                 GUILayout.Label("-----");
 
-                GUILayout.Label("LocalPlayer:");
-                GUILayout.Label("Name:");
-                nickname = GUILayout.TextField(nickname);
-                connectionModel.RenameLocalPlayerTo(nickname);
+                GUILayout.BeginHorizontal();
+                    GUILayout.Label("Your name:");
+                    nickname = GUILayout.TextField(nickname);
+                    connectionModel.RenameLocalPlayerTo(nickname);
+                GUILayout.EndHorizontal();
 
                 if (PhotonNetwork.IsMasterClient)
                 {
@@ -103,12 +109,17 @@ public class ConnectionTestViewController : MonoBehaviour
                         connectionModel.StartGame();
                     }
                 }
-                
+
                 break;
         }
 
-        GUI.color = Color.red;
-        GUILayout.Label("LastError: " + lastError);
+        if (!string.IsNullOrEmpty(lastError))
+        {
+            GUI.color = Color.red;
+            GUILayout.Label("LastError: " + lastError);
+        }
+
+        GUILayout.EndArea();
     }
 
 }
