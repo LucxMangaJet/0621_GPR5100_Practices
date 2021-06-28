@@ -9,7 +9,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     [SerializeField] new Rigidbody2D rigidbody;
     [SerializeField] TrailRenderer trailRenderer;
     [SerializeField] ParticleSystem jumpParticles;
-    [SerializeField] ParticleSystem slamParticles;
     [SerializeField] GameObject cameraObject;
 
     [SerializeField] UnityEngine.UI.Text nicknameText;
@@ -20,7 +19,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     private float horizontal;
     private float vertical;
     bool isBoosting;
-    bool isSlamming;
 
     private void Start()
     {
@@ -75,15 +73,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
                 StopBoosting();
             }
 
-            if (vertical < 0 && oldVertical >= 0 && !isGrounded)
-            {
-                StartSlamming();
-            }
-            else if ((vertical >= 0 && oldVertical < 0) || isGrounded)
-            {
-                StopSlamming();
-            }
-
 
             rigidbody.velocity = new Vector2(horizontal * moveSpeed, rigidbody.velocity.y);
 
@@ -93,12 +82,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         {
             rigidbody.AddForce(Vector2.up * boostForce * Time.fixedDeltaTime, ForceMode2D.Impulse);
         }
-
-        if (isSlamming)
-        {
-            rigidbody.AddForce(Vector2.down * slamForce * Time.fixedDeltaTime, ForceMode2D.Impulse);
-        }
-
 
 
     }
@@ -128,31 +111,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         isBoosting = false;
         var emission = jumpParticles.emission;
         emission.rateOverTimeMultiplier = 0;
-    }
-
-
-    private void StartSlamming()
-    {
-        isSlamming = true;
-        photonView.RPC("RPC_StartSlamming", RpcTarget.All);
-    }
-
-    [PunRPC]
-    private void RPC_StartSlamming()
-    {
-        slamParticles.Play();
-    }
-
-    private void StopSlamming()
-    {
-        isSlamming = false;
-        photonView.RPC("RPC_StopSlamming", RpcTarget.All);
-    }
-
-    [PunRPC]
-    private void RPC_StopSlamming()
-    {
-        slamParticles.Stop();
     }
 
     private void Jump()
