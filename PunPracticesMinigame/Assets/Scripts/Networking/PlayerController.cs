@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     [SerializeField] float moveSpeed, jumpVelocity, boostForce, slamForce;
     [SerializeField] Vector2 groundedCheckSize, groundedCheckOffset;
     [SerializeField] int jumpParticlesToEmit;
+    [SerializeField] float slammingKillForce;
 
     private float horizontal;
     private float vertical;
@@ -133,25 +134,25 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     private void StartSlamming()
     {
-        isSlamming = true;
         photonView.RPC("RPC_StartSlamming", RpcTarget.All);
     }
 
     [PunRPC]
     private void RPC_StartSlamming()
     {
+        isSlamming = true;
         slamParticles.Play();
     }
 
     private void StopSlamming()
     {
-        isSlamming = false;
         photonView.RPC("RPC_StopSlamming", RpcTarget.All);
     }
 
     [PunRPC]
     private void RPC_StopSlamming()
     {
+        isSlamming = false;
         slamParticles.Stop();
     }
 
@@ -191,5 +192,26 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
             horizontal = (float)stream.ReceiveNext();
             vertical = (float)stream.ReceiveNext();
         }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!photonView.IsMine) return;
+
+        if (collision.relativeVelocity.magnitude > slammingKillForce && collision.collider.TryGetComponent(out PlayerController other))
+        {
+            if (!isSlamming && other.isSlamming)
+            {
+                Debug.Log($"Killed with a force of {collision.relativeVelocity.magnitude}");
+                Respawn();
+            }
+        }
+    }
+
+    public void Respawn()
+    {
+        Debug.Log("Respawning");
+        transform.position = Vector3.zero;
+        rigidbody.velocity = Vector2.zero;
     }
 }
