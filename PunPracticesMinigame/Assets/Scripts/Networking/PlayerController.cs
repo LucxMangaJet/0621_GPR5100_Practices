@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     [SerializeField] TrailRenderer trailRenderer;
     [SerializeField] ParticleSystem jumpParticles;
     [SerializeField] ParticleSystem slamParticles;
+    [SerializeField] ParticleSystem deathParticles;
     [SerializeField] GameObject cameraObject;
 
     [SerializeField] UnityEngine.UI.Text nicknameText;
@@ -213,5 +214,12 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         Debug.Log("Respawning");
         transform.position = Vector3.zero;
         rigidbody.velocity = Vector2.zero;
+        photonView.RPC(nameof(RPC_Respawn), RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPC_Respawn()
+    {
+        deathParticles.Emit(100);
     }
 }
